@@ -10,8 +10,10 @@ export interface StakeData {
   stake_out: {
     total: bigint;
     per_addr: Map<string, bigint>;
-    per_net: Map<number, bigint>;
-    per_addr_per_net: Map<number, Map<string, bigint>>;
+    total_per_addr: {
+      validatorAddress: string;
+      totalStaked: string;
+    }[];
   };
 }
 
@@ -52,7 +54,6 @@ export type TransactionStatus = {
 export interface Staking {
   validator: string;
   amount: string;
-  netUid: number;
   callback?: (status: TransactionStatus) => void;
 }
 
@@ -66,7 +67,6 @@ export interface TransferStake {
   fromValidator: string;
   toValidator: string;
   amount: string;
-  netUid: number;
   callback?: (status: TransactionStatus) => void;
 }
 

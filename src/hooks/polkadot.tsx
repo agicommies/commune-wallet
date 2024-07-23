@@ -159,7 +159,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     setOpenModal(false);
   }
 
-  async function addStake({ netUid, validator, amount, callback }: Staking) {
+  async function addStake({ validator, amount, callback }: Staking) {
     if (
       !api ||
       !selectedAccount ||
@@ -171,7 +171,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
 
     api.tx.subspaceModule
-      .addStake(netUid, validator, calculate_amount(amount))
+      .addStake(validator, calculate_amount(amount))
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
@@ -227,7 +227,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       });
   }
 
-  async function removeStake({ netUid, validator, amount, callback }: Staking) {
+  async function removeStake({ validator, amount, callback }: Staking) {
     if (
       !api ||
       !selectedAccount ||
@@ -239,7 +239,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
 
     api.tx.subspaceModule
-      .removeStake(netUid, validator, calculate_amount(amount))
+      .removeStake(validator, calculate_amount(amount))
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
@@ -367,7 +367,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     fromValidator,
     toValidator,
     amount,
-    netUid,
+
     callback,
   }: TransferStake) {
     if (
@@ -381,12 +381,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
 
     api.tx.subspaceModule
-      .transferStake(
-        netUid,
-        fromValidator,
-        toValidator,
-        calculate_amount(amount),
-      )
+      .transferStake(fromValidator, toValidator, calculate_amount(amount))
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },

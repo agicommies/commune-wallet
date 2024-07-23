@@ -33,7 +33,6 @@ export const Wallet = () => {
   const [validator, setValidator] = useState<string>("");
   const [fromValidator, setFromValidator] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
-  const [netUid, setNetUid] = useState<number>(0);
   const [openValidators, setOpenValidators] = useState(false);
   const [openStakedValidators, setOpenStakedValidators] = useState(false);
 
@@ -93,7 +92,6 @@ export const Wallet = () => {
       addStake({
         validator,
         amount,
-        netUid,
         callback: handleCallback,
       });
     }
@@ -101,7 +99,6 @@ export const Wallet = () => {
       removeStake({
         validator,
         amount,
-        netUid,
         callback: handleCallback,
       });
     }
@@ -110,7 +107,6 @@ export const Wallet = () => {
         fromValidator: fromValidator,
         toValidator: validator,
         amount,
-        netUid,
         callback: handleCallback,
       });
     }
@@ -179,7 +175,6 @@ export const Wallet = () => {
     address: string;
   }) => {
     setValidator(validator.address);
-    setNetUid(validator.netuid);
   };
 
   return (
@@ -332,21 +327,6 @@ export const Wallet = () => {
                   >
                     {inputError.value}
                   </p>
-                )}
-                {(activeMenu === "stake" ||
-                  activeMenu === "unstake" ||
-                  activeMenu === "transfer stake") && (
-                  <div className="w-full">
-                    <p className="text-base">Net UID</p>
-                    <input
-                      type="number"
-                      disabled={transactionStatus.status === "PENDING"}
-                      value={netUid}
-                      onChange={(e) => setNetUid(parseInt(e.target.value))}
-                      placeholder="The net UID to use in the transaction"
-                      className="w-full border bg-black/50 p-2"
-                    />
-                  </div>
                 )}
                 <button
                   type="submit"

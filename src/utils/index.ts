@@ -86,11 +86,9 @@ export async function get_all_stake_out(api: ApiPromise) {
   let total = 0n;
   // Total stake per address
   const per_addr = new Map<string, bigint>();
-  // Total stake per netuid
-  const per_net = new Map<number, bigint>();
-  // Total stake per address per netuid
-  const per_addr_per_net = new Map<number, Map<string, bigint>>();
-  // Total stake per address across all subnets
+  // Total stake per address per to_address
+  const per_addr_per_to = new Map<string, Map<string, bigint>>();
+  // Total stake per address across all stakes
   const total_per_addr = new Map<string, bigint>();
 
   for (const stake_to_item of stake_to_query) {
@@ -98,55 +96,34 @@ export async function get_all_stake_out(api: ApiPromise) {
       throw new Error(`Invalid stakeTo item '${stake_to_item.toString()}'`);
     const [key_raw, value_raw] = stake_to_item;
 
-    const [netuid_raw, from_addr_raw] = key_raw.args;
-    if (netuid_raw == null || from_addr_raw == null)
+    const [from_addr_raw, to_addr_raw] = key_raw.args;
+    if (from_addr_raw == null || to_addr_raw == null)
       throw new Error("stakeTo storage key is nullish");
 
-    const netuid = netuid_raw.toPrimitive();
     const from_addr = from_addr_raw.toHuman();
-    const stake_to_map_for_key = value_raw.toPrimitive();
+    const to_addr = to_addr_raw.toHuman();
+    const staked = BigInt(value_raw.toString());
 
-    if (typeof netuid !== "number")
-      throw new Error("Invalid stakeTo storage key (netuid)");
     if (typeof from_addr !== "string")
       throw new Error("Invalid stakeTo storage key (from_addr)");
-    if (typeof stake_to_map_for_key !== "object")
-      throw new Error("Invalid stakeTo storage value");
-    if (Array.isArray(stake_to_map_for_key))
-      throw new Error("Invalid stakeTo storage value, it's an array");
+    if (typeof to_addr !== "string")
+      throw new Error("Invalid stakeTo storage key (to_addr)");
 
-    for (const module_key in stake_to_map_for_key) {
-      const staked_ = stake_to_map_for_key[module_key];
+    // Add stake to total
+    total += staked;
 
-      // TODO: It's possible that this ill turn into a string if the number is too big and we need to convert to a bigint
-      if (typeof staked_ !== "number" && typeof staked_ !== "string")
-        throw new Error(
-          "Invalid stakeTo storage value item, it's not a number or string",
-        );
-      const staked = BigInt(staked_);
+    // Add stake to (addr => stake) map
+    const old_total = per_addr.get(from_addr) ?? 0n;
+    per_addr.set(from_addr, old_total + staked);
 
-      // Add stake to total
-      total += staked;
+    // Add stake to (from_addr => to_addr => stake) map
+    const map_to = per_addr_per_to.get(from_addr) ?? new Map<string, bigint>();
+    map_to.set(to_addr, staked);
+    per_addr_per_to.set(from_addr, map_to);
 
-      // Add stake to (addr => stake) map
-      const old_total = per_addr.get(from_addr) ?? 0n;
-      per_addr.set(from_addr, old_total + staked);
-
-      // Add stake to (netuid => stake) map
-      const old_total_for_net = per_net.get(netuid) ?? 0n;
-      per_net.set(netuid, old_total_for_net + staked);
-
-      // Add stake to (netuid => addr => stake) map
-      const map_net = per_addr_per_net.get(netuid) ?? new Map<string, bigint>();
-      const old_total_addr_net = map_net.get(from_addr) ?? 0n;
-      map_net.set(from_addr, old_total_addr_net + staked);
-
-      // Add stake to total_per_addr map
-      const old_total_per_addr = total_per_addr.get(from_addr) ?? 0n;
-      total_per_addr.set(from_addr, old_total_per_addr + staked);
-    }
-
-    // await do_repl({ api, netuid, from_addr, value_raw }); break
+    // Add stake to total_per_addr map
+    const old_total_per_addr = total_per_addr.get(from_addr) ?? 0n;
+    total_per_addr.set(from_addr, old_total_per_addr + staked);
   }
 
   // Convert total_per_addr map to array of objects
@@ -163,8 +140,7 @@ export async function get_all_stake_out(api: ApiPromise) {
     stake_out: {
       total,
       per_addr,
-      per_net,
-      per_addr_per_net,
+      per_addr_per_to,
       total_per_addr: total_per_addr_array,
     },
   };
