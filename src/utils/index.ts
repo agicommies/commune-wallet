@@ -149,39 +149,28 @@ export async function get_all_stake_out(api: ApiPromise) {
 export async function get_user_total_stake(
   api: ApiPromise,
   address: string,
-): Promise<{ address: string; stake: string; netuid: number }[]> {
+): Promise<{ address: string; stake: string }[]> {
   const { api_at_block } = await use_last_block(api);
-  const N_query = await api_at_block.query.subspaceModule?.n?.entries();
 
-  if (!N_query) throw new Error("Query to n returned nullish");
+  if (!api_at_block.query.subspaceModule?.stakeTo) {
+    throw new Error("StakeTo query not available");
+  }
 
-  const stakePromises = N_query.map(async ([netuid_raw, _]) => {
-    const netuid = parseInt(netuid_raw.toHuman() as string, 10);
+  const stakeEntries =
+    await api_at_block.query.subspaceModule.stakeTo.entries(address);
 
-    if (!api_at_block.query.subspaceModule?.stakeTo) return null;
-
-    const stake = await api_at_block.query.subspaceModule.stakeTo(
-      netuid,
-      address,
-    );
-
-    const stakeHuman = stake.toHuman();
-
-    if (!stakeHuman) return null;
+  const stakes = stakeEntries.map(([key, value]) => {
+    const [, stakeToAddress] = key.args;
+    const stake = value.toString();
 
     return {
-      address,
-      stake: stakeHuman,
-      netuid,
+      address: stakeToAddress!.toString(),
+      stake,
     };
   });
 
-  const stakes = await Promise.all(stakePromises);
+  console.log(stakes);
 
-  // Filter out any null results
-  return stakes.filter((stake) => stake !== null) as {
-    address: string;
-    stake: string;
-    netuid: number;
-  }[];
+  // Filter out any entries with zero stake
+  return stakes.filter((stake) => stake.stake !== "0");
 }

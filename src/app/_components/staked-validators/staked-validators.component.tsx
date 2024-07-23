@@ -6,23 +6,7 @@ import { usePolkadot } from "~/hooks/polkadot";
 
 interface Validator {
   description: string;
-  netuid: number;
   address: string;
-}
-
-export type Stake = Record<string, string>;
-
-export interface UserStake {
-  address: string;
-  netuid: number;
-  stake: Stake;
-}
-
-export interface UserStakeData {
-  block_number: number;
-  block_hash_hex: string;
-  total_stake: string;
-  stakes: UserStake[];
 }
 
 export const StakedValidators = ({
@@ -73,34 +57,34 @@ export const StakedValidators = ({
                 </Link>
               </div>
 
-              {userTotalStake.flatMap((stake) =>
-                Object.entries(stake.stake).map(([address, amount]) => (
-                  <button
-                    key={`${stake.netuid}-${address}`}
-                    onClick={() => {
-                      onSelectValidator({
-                        description: `Stake Amount: ${Math.round(from_nano(Number(amount)))} COMAI`,
-                        netuid: stake.netuid,
-                        address,
-                      });
-                      setOpen(false);
-                    }}
-                    className={`text-md flex cursor-pointer items-center gap-x-3 overflow-auto border p-5 transition hover:bg-green-500/10`}
-                  >
-                    <div className="flex w-full flex-col items-start gap-1">
-                      <span className="font-semibold">
-                        Address: {small_address(address)}
+              {userTotalStake.map(({ address, stake }) => (
+                <button
+                  key={address}
+                  onClick={() => {
+                    onSelectValidator({
+                      description: `Stake Amount: ${Math.round(from_nano(Number(stake)))} COMAI`,
+                      address,
+                    });
+                    setOpen(false);
+                  }}
+                  className={`text-md flex cursor-pointer items-center gap-x-3 overflow-auto border p-5 transition hover:bg-green-500/10`}
+                >
+                  <div className="flex w-full flex-col items-start gap-1">
+                    <span className="font-semibold">
+                      Address: {small_address(address)}
+                    </span>
+                    <div className="flex w-full flex-col items-start justify-between md:flex-row">
+                      <span className="text-gray-400">
+                        Stake Amount:{" "}
+                        <span className="text-green-500">
+                          {Math.round(from_nano(Number(stake)))}
+                        </span>{" "}
+                        $COMAI
                       </span>
-                      <div className="flex w-full flex-col items-start justify-between md:flex-row">
-                        <span>NetUID: {stake.netuid}</span>
-                        <span className="text-gray-400">
-                          Stake Amount: {amount}
-                        </span>
-                      </div>
                     </div>
-                  </button>
-                )),
-              )}
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </div>

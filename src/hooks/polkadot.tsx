@@ -38,7 +38,7 @@ interface PolkadotContextType {
 
   blockNumber: number;
   stakeData: StakeData | null;
-  userTotalStake: { address: string; stake: string; netuid: number }[];
+  userTotalStake: { address: string; stake: string }[];
 
   handleConnect: () => void;
 
@@ -79,7 +79,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [stakeData, setStakeData] = useState<StakeData | null>(null);
   const [blockNumber, setBlockNumber] = useState(0);
   const [userTotalStake, setUserTotalStake] = useState<
-    { address: string; stake: string; netuid: number }[]
+    { address: string; stake: string }[]
   >([]);
 
   async function loadPolkadotApi() {
